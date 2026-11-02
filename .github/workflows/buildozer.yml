@@ -13,11 +13,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      # ВАЖНО: Фиксируем Python 3.11, так как Kivy 2.3.x не работает с 3.14
+      # 1. Фиксируем Python 3.11 (Kivy 2.3.x не работает с 3.14)
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      
+      # 2. Явно устанавливаем Java 17 (требуется для сборки Android)
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
       
       - name: Install system dependencies
         run: |
@@ -26,11 +33,10 @@ jobs:
             autoconf automake build-essential libtool pkg-config \
             zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 \
             cmake libffi-dev libssl-dev \
-            openjdk-17-jdk-headless \
             git zip unzip wget \
             libpq-dev
       
-      # ВАЖНО: Фиксируем Cython < 3.0 для совместимости с Kivy 2.3.1
+      # 3. Фиксируем Cython < 3.0 (обязательно для Kivy 2.3.1)
       - name: Install Buildozer and Cython
         run: |
           pip install --upgrade pip
