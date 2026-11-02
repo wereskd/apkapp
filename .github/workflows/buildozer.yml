@@ -13,11 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Python 3.11 — Kivy 2.x не собирается на 3.12+ (Cython падает из-за удаления модуля cgi)
+      # Kivy 2.3.1 поддерживает Python до 3.12 включительно (не 3.13+),
+      # а python-for-android при сборке берёт версию host-Python напрямую.
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -44,29 +45,23 @@ jobs:
             patchelf \
             libpq-dev
 
-      # Cython 0.29.x обязателен для Kivy 2.2.1
+      # Cython 0.29.x обязателен для сборки Kivy из исходников на устройстве
       - name: Install Buildozer and Cython
         run: |
-          pip install --upgrade pip "virtualenv==20.22.0"
+          pip install --upgrade pip "virtualenv==20.26.2"
           pip install buildozer "cython<3.0" setuptools wheel
 
-      # КРИТИЧНО: PEP517 build-env изолирован и НЕ наследует cython<3.0 извне.
-      # Без этой директивы Kivy тянет последний Cython, который на Python 3.12+
-      # падает с "ModuleNotFoundError: No module named 'cgi'" (модуль cgi удалён
-      # в 3.13). Принудительно ставим старый Cython внутрь изолированного окружения.
-      - name: Force old Cython inside isolated PEP517 build environments
+      # КРИТИЧНО: PEP517 изолированные окружения сборки тянут последний Cython,
+      # который ломается ("No module named 'cgi'"). Ограничиваем версии через
+      # PIP_CONSTRAINT — переменная наследуется всеми вложенными вызовами pip,
+      # включая сборку внутри python-for-android.
+      - name: Pin versions inside isolated PEP517 build environments
         run: |
-          cat > setup.cfg <<'EOF'
-          [global]
-          setup_requires =
-              Cython<3.0
-              setuptools<70
-              wheel
-
-          [build_ext]
-          inplace=1
+          cat > "$RUNNER_TEMP/pip-constraints.txt" <<'EOF'
+          Cython<3.0
+          setuptools<70
           EOF
-          echo "SETUPTOOLS_USE_DISTUTILS=local" >> "$GITHUB_ENV"
+          echo "PIP_CONSTRAINT=$RUNNER_TEMP/pip-constraints.txt" >> "$GITHUB_ENV"
 
       - name: Cache buildozer downloads
         uses: actions/cache@v4
@@ -92,12 +87,3 @@ jobs:
           name: warehouse-apk
           path: bin/*.apk
           if-no-files-found: warn
-
-      - name: Upload build log on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: |
-            .buildozer/log/latest
-          if-no-files-found: ignore
