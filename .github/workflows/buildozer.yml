@@ -58,7 +58,7 @@ jobs:
       - name: Pin versions inside isolated PEP517 build environments
         run: |
           cat > "$RUNNER_TEMP/pip-constraints.txt" <<'EOF'
-          cython<3.1
+          Cython<3.1
           setuptools<80
           wheel<0.46
           EOF
