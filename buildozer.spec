@@ -7,7 +7,7 @@ version = 1.0.0
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,db,json
 
-requirements = python3,kivy==2.3.1,sqlalchemy,bcrypt,psycopg2
+requirements = python3,kivy==2.3.1,sqlalchemy,bcrypt,psycopg2cffi,cffi
 
 orientation = portrait
 android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,ACCESS_NETWORK_STATE
