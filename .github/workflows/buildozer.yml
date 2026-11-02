@@ -26,6 +26,14 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       
+      - name: Pre-accept Android SDK licenses
+        run: |
+          mkdir -p "$ANDROID_SDK_ROOT/licenses"
+          printf '\n8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n' >> "$ANDROID_SDK_ROOT/licenses/android-sdk-license"
+          printf '\n84831b9409646a918e30573bab4c9c91346d8abd\n' > "$ANDROID_SDK_ROOT/licenses/android-sdk-preview-license"
+        env:
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -34,27 +42,30 @@ jobs:
             zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 \
             cmake libffi-dev libssl-dev \
             git zip unzip wget \
+            patchelf \
             libpq-dev
       
-      # 3. Фиксируем Cython < 3.0 (обязательно для Kivy 2.3.1)
+      # 3. Фиксируем Cython < 3.0 (обязательно для Kivy)
       - name: Install Buildozer and Cython
         run: |
           pip install --upgrade pip
           pip install buildozer "cython<3.0"
       
-      - name: Pre-accept Android SDK licenses
-        run: |
-          mkdir -p "$ANDROID_SDK_ROOT/licenses"
-          echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "$ANDROID_SDK_ROOT/licenses/android-sdk-license"
-          echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_SDK_ROOT/licenses/android-sdk-preview-license"
-        env:
-          ANDROID_SDK_ROOT: /opt/android/sdk
+      - name: Cache buildozer downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/buildozer
+            .buildozer
+          key: buildozer-${{ hashFiles('buildozer.spec') }}
+          restore-keys: buildozer-
       
       - name: Build APK
         run: |
           buildozer android debug
         env:
-          ANDROID_SDK_ROOT: /opt/android/sdk
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+          ANDROID_HOME: /usr/local/lib/android/sdk
           CI: true
       
       - name: Upload APK
