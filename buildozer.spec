@@ -24,7 +24,7 @@ version = 1.0.0
 
 # --- КРИТИЧЕСКИ ВАЖНЫЕ НАСТРОЙКИ (сохранены из твоего примера) ---
 # Библиотеки: адаптированы под складской учет + PostgreSQL через CFFI
-requirements = python3==3.10.12,hostpython3==3.10.12,setuptools,wheel,kivy==2.2.1,sqlalchemy,psycopg2cffi,cffi
+requirements = python3,kivy==2.2.1,sqlalchemy,pg8000
 
 # Ориентация экрана
 orientation = portrait
