@@ -13,6 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      # ВАЖНО: Фиксируем Python 3.11, так как Kivy 2.3.x не работает с 3.14
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -29,6 +30,7 @@ jobs:
             git zip unzip wget \
             libpq-dev
       
+      # ВАЖНО: Фиксируем Cython < 3.0 для совместимости с Kivy 2.3.1
       - name: Install Buildozer and Cython
         run: |
           pip install --upgrade pip
