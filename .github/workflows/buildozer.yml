@@ -48,8 +48,21 @@ jobs:
       # 3. Фиксируем Cython < 3.0 (обязательно для Kivy)
       - name: Install Buildozer and Cython
         run: |
-          pip install --upgrade pip
-          pip install buildozer "cython<3.0" "virtualenv<20.23"
+          pip install --upgrade pip "virtualenv==20.22.0"
+          pip install buildozer "cython<3.0"
+
+      # Критично: изолированные PEP517-окружения (сборка Kivy через Cython)
+      # иначе тянут Cython 3.1+, который на Python 3.12+ падает с
+      # ModuleNotFoundError: No module named 'cgi'. Ограничиваем версии pip
+      # глобально — переменная подхватится всеми вложенными вызовами pip.
+      - name: Pin versions inside isolated PEP517 build environments
+        run: |
+          cat > "$RUNNER_TEMP/pip-constraints.txt" <<'EOF'
+          cython<3.1
+          setuptools<80
+          wheel<0.46
+          EOF
+          echo "PIP_CONSTRAINT=$RUNNER_TEMP/pip-constraints.txt" >> "$GITHUB_ENV"
       
       - name: Cache buildozer downloads
         uses: actions/cache@v4
