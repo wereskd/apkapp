@@ -3,7 +3,7 @@ name: Build APK
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:  # Позволяет запускать вручную
+  workflow_dispatch:
 
 jobs:
   build:
@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -33,12 +33,22 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython==0.29.36
       
+      - name: Pre-accept Android SDK licenses
+        run: |
+          # Создаем директорию для лицензий, если её нет
+          mkdir -p "$ANDROID_SDK_ROOT/licenses"
+          # Записываем хэши принятых лицензий (стандартный способ для CI/CD)
+          echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "$ANDROID_SDK_ROOT/licenses/android-sdk-license"
+          echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_SDK_ROOT/licenses/android-sdk-preview-license"
+        env:
+          ANDROID_SDK_ROOT: /opt/android/sdk
+      
       - name: Build APK
         run: |
           buildozer -v android debug
         env:
-          # Принимаем лицензии Android SDK автоматически
           ANDROID_SDK_ROOT: /opt/android/sdk
+          CI: true
       
       - name: Upload APK
         uses: actions/upload-artifact@v4
