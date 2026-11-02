@@ -26,18 +26,17 @@ jobs:
             zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 \
             cmake libffi-dev libssl-dev \
             openjdk-17-jdk-headless \
-            git zip unzip wget
+            git zip unzip wget \
+            libpq-dev
       
-      - name: Install Buildozer
+      - name: Install Buildozer and Cython
         run: |
           pip install --upgrade pip
-          pip install buildozer cython==0.29.36
+          pip install buildozer "cython<3.0"
       
       - name: Pre-accept Android SDK licenses
         run: |
-          # Создаем директорию для лицензий, если её нет
           mkdir -p "$ANDROID_SDK_ROOT/licenses"
-          # Записываем хэши принятых лицензий (стандартный способ для CI/CD)
           echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "$ANDROID_SDK_ROOT/licenses/android-sdk-license"
           echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_SDK_ROOT/licenses/android-sdk-preview-license"
         env:
@@ -45,7 +44,7 @@ jobs:
       
       - name: Build APK
         run: |
-          buildozer -v android debug
+          buildozer android debug
         env:
           ANDROID_SDK_ROOT: /opt/android/sdk
           CI: true
