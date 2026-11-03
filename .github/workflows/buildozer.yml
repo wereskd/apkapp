@@ -26,13 +26,25 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Pre-accept Android SDK licenses
+      - name: Install Android SDK platform (build-tools 33)
         run: |
-          mkdir -p "$ANDROID_SDK_ROOT/licenses"
-          printf '\n8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n' >> "$ANDROID_SDK_ROOT/licenses/android-sdk-license"
-          printf '\n84831b9409646a918e30573bab4c9c91346d8abd\n' > "$ANDROID_SDK_ROOT/licenses/android-sdk-preview-license"
+          SDK_DIR="$ANDROID_SDK_ROOT"
+          mkdir -p "$SDK_DIR/licenses"
+          printf '\n8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n' >> "$SDK_DIR/licenses/android-sdk-license"
+          printf '\n84831b9409646a918e30573bab4c9c91346d8abd\n' > "$SDK_DIR/licenses/android-sdk-preview-license"
+          CMDLINE_VER="11076708"
+          wget -q "https://dl.google.com/android/repository/commandlinetools-linux-${CMDLINE_VER}_latest.zip" -O /tmp/cmdline-tools.zip
+          unzip -q /tmp/cmdline-tools.zip -d "$SDK_DIR/cmdline-tools-tmp"
+          mkdir -p "$SDK_DIR/cmdline-tools/latest"
+          cp -r "$SDK_DIR/cmdline-tools-tmp/cmdline-tools"/. "$SDK_DIR/cmdline-tools/latest/"
+          rm -rf "$SDK_DIR/cmdline-tools-tmp"
+          yes | "$SDK_DIR/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$SDK_DIR/cmdline-tools/latest/bin/sdkmanager" "platforms;android-33" "build-tools;33.0.2" "platform-tools"
+          ls "$SDK_DIR/platforms"
         env:
           ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+          ANDROID_HOME: /usr/local/lib/android/sdk
+          JAVA_HOME: ${{ env.JAVA_HOME }}
 
       - name: Install system dependencies
         run: |
@@ -63,14 +75,15 @@ jobs:
           EOF
           echo "PIP_CONSTRAINT=$RUNNER_TEMP/pip-constraints.txt" >> "$GITHUB_ENV"
 
+      # Кэшируем ТОЛЬКО загруженные архивы (~/.cache/buildozer).
+      # Каталог .buildozer не кэшируется: в нём хранятся настроенные градиентные
+      # сборки, которые ломаются при смене состава SDK/платформ на раннере.
       - name: Cache buildozer downloads
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.cache/buildozer
-            .buildozer
-          key: buildozer-${{ hashFiles('buildozer.spec') }}
-          restore-keys: buildozer-
+          path: ~/.cache/buildozer
+          key: buildozer-dl-${{ hashFiles('buildozer.spec') }}
+          restore-keys: buildozer-dl-
 
       - name: Build APK
         run: |
