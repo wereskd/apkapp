@@ -123,8 +123,9 @@ class DetailsListScreen(Screen):
         container = self.ids.details_container
         container.clear_widgets()
 
-        session = get_session()
         try:
+            session = get_session()
+        
             service = DetailService(session)
             items = service.search(query=query)
 
@@ -168,7 +169,12 @@ class DetailsListScreen(Screen):
         except Exception as e:
             show_popup("Ошибка", str(e))
         finally:
-            session.close()
+            try:
+                session.close()
+            except NameError:
+                pass
+            except NameError:
+                pass
 
     def on_search(self) -> None:
         query = self.ids.search_input.text.strip()

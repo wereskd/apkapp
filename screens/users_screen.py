@@ -110,8 +110,9 @@ class UsersScreen(Screen):
         container = self.ids.users_container
         container.clear_widgets()
 
-        session = get_session()
         try:
+            session = get_session()
+        
             repo = UserRepository(session)
             users = repo.list()
 
@@ -151,7 +152,12 @@ class UsersScreen(Screen):
         except Exception as e:
             show_popup("Ошибка", str(e))
         finally:
-            session.close()
+            try:
+                session.close()
+            except NameError:
+                pass
+            except NameError:
+                pass
 
     def show_add_user_popup(self) -> None:
         content = BoxLayout(orientation='vertical', spacing=dp(10), padding=dp(15))
@@ -216,8 +222,9 @@ class UsersScreen(Screen):
                 show_popup("Ошибка", "Заполните все поля")
                 return
 
-            session = get_session()
             try:
+                session = get_session()
+            
                 auth = AuthService(session)
                 current_user = App.get_running_app().current_user
                 auth.register(username, password, fullname, role_name, current_user=current_user)
@@ -227,12 +234,23 @@ class UsersScreen(Screen):
                 self.load_users()
             except ValueError as e:
                 show_popup("Ошибка", str(e))
-                session.rollback()
+                try:
+                    session.rollback()
+                except NameError:
+                    pass
             except Exception as e:
                 show_popup("Ошибка", str(e))
-                session.rollback()
+                try:
+                    session.rollback()
+                except NameError:
+                    pass
             finally:
-                session.close()
+                try:
+                    session.close()
+                except NameError:
+                    pass
+                except NameError:
+                    pass
 
         btn_confirm = Button(
             text='Создать',

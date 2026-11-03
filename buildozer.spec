@@ -24,7 +24,7 @@ version = 1.0.0
 
 # --- КРИТИЧЕСКИ ВАЖНЫЕ НАСТРОЙКИ (сохранены из твоего примера) ---
 # Библиотеки: адаптированы под складской учет + PostgreSQL через CFFI
-requirements = python3,kivy==2.3.1,sqlalchemy,pg8000,openssl,android 
+requirements = python3,kivy==2.3.1,sqlalchemy,pg8000,bcrypt,openssl,android 
 
 # Ориентация экрана
 orientation = portrait
