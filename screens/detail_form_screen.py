@@ -215,9 +215,8 @@ class DetailFormScreen(Screen):
             self.clear_form()
 
     def load_detail_data(self) -> None:
+        session = get_session()
         try:
-            session = get_session()
-        
             service = DetailService(session)
             detail = service.details.get(self.detail_id)
             if detail:
@@ -230,12 +229,7 @@ class DetailFormScreen(Screen):
         except Exception as e:
             show_popup("Ошибка", str(e))
         finally:
-            try:
-                session.close()
-            except NameError:
-                pass
-            except NameError:
-                pass
+            session.close()
 
     def clear_form(self) -> None:
         self.ids.sku_input.text = ""
@@ -272,9 +266,8 @@ class DetailFormScreen(Screen):
             error.text = "Неверный формат минимального остатка"
             return
 
+        session = get_session()
         try:
-            session = get_session()
-        
             service = DetailService(session, user=user)
 
             if self.is_edit_mode and self.detail_id is not None:
@@ -300,23 +293,12 @@ class DetailFormScreen(Screen):
 
         except ValueError as e:
             error.text = str(e)
-            try:
-                session.rollback()
-            except NameError:
-                pass
+            session.rollback()
         except Exception as e:
             error.text = f"Ошибка: {e}"
-            try:
-                session.rollback()
-            except NameError:
-                pass
+            session.rollback()
         finally:
-            try:
-                session.close()
-            except NameError:
-                pass
-            except NameError:
-                pass
+            session.close()
 
     def go_back(self) -> None:
         self.manager.current = "details_list"

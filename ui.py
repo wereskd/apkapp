@@ -200,9 +200,8 @@ class LoginScreen(Screen):
             error.text = "Введите логин и пароль"
             return
 
+        session = get_session()
         try:
-            session = get_session()
-        
             auth = AuthService(session)
             user = auth.login(username, password)
             app = App.get_running_app()
@@ -213,22 +212,10 @@ class LoginScreen(Screen):
             error.text = ""
         except ValueError as e:
             error.text = str(e)
-            try:
-                session.close()
-            except NameError:
-                pass
-            except NameError:
-                pass
+            session.close()
         except Exception as e:
-            # Ошибки БД (недоступен PostgreSQL, нет драйвера) показываем
-            # на экране вместо закрытия приложения.
             error.text = f"Ошибка: {e}"
-            try:
-                session.close()
-            except NameError:
-                pass
-            except NameError:
-                pass
+            session.close()
 
     def go_to_register(self) -> None:
         self.manager.current = "register"
@@ -332,10 +319,7 @@ class MainScreen(Screen):
         app = App.get_running_app()
         session = getattr(app, "current_session", None)
         if session:
-            try:
-                session.close()
-            except NameError:
-                pass
+            session.close()
         app.current_user = None
         app.current_session = None
         self.welcome_text = ""

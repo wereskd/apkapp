@@ -196,9 +196,8 @@ class OperationScreen(Screen):
     def load_details(self) -> None:
         """Загружает список деталей в Spinner."""
         self.detail_ids = []
+        session = get_session()
         try:
-            session = get_session()
-        
             repo = DetailRepository(session)
             details = repo.list()
 
@@ -216,12 +215,7 @@ class OperationScreen(Screen):
         except Exception as e:
             show_popup("Ошибка", str(e))
         finally:
-            try:
-                session.close()
-            except NameError:
-                pass
-            except NameError:
-                pass
+            session.close()
 
     def submit_operation(self) -> None:
         """Оформляет операцию прихода или расхода."""
@@ -249,9 +243,8 @@ class OperationScreen(Screen):
             error.text = "Ошибка выбора детали"
             return
 
+        session = get_session()
         try:
-            session = get_session()
-        
             service = OperationService(session)
             user = App.get_running_app().current_user
 
@@ -282,23 +275,12 @@ class OperationScreen(Screen):
 
         except ValueError as e:
             error.text = str(e)
-            try:
-                session.rollback()
-            except NameError:
-                pass
+            session.rollback()
         except Exception as e:
             error.text = f"Ошибка: {e}"
-            try:
-                session.rollback()
-            except NameError:
-                pass
+            session.rollback()
         finally:
-            try:
-                session.close()
-            except NameError:
-                pass
-            except NameError:
-                pass
+            session.close()
 
     def go_back(self) -> None:
         """Возврат на главный экран."""

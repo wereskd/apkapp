@@ -8,44 +8,24 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      # Kivy 2.3.1 поддерживает Python до 3.12 включительно (не 3.13+),
-      # а python-for-android при сборке берёт версию host-Python напрямую.
+      
+      # 1. Фиксируем Python 3.11 (Kivy 2.3.x не работает с 3.14)
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-
+          python-version: '3.10.12'
+      
+      # 2. Явно устанавливаем Java 17 (требуется для сборки Android)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-
-      - name: Install Android SDK platform (build-tools 33)
-        run: |
-          SDK_DIR="$ANDROID_SDK_ROOT"
-          mkdir -p "$SDK_DIR/licenses"
-          printf '\n8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n' >> "$SDK_DIR/licenses/android-sdk-license"
-          printf '\n84831b9409646a918e30573bab4c9c91346d8abd\n' > "$SDK_DIR/licenses/android-sdk-preview-license"
-          CMDLINE_VER="11076708"
-          wget -q "https://dl.google.com/android/repository/commandlinetools-linux-${CMDLINE_VER}_latest.zip" -O /tmp/cmdline-tools.zip
-          unzip -q /tmp/cmdline-tools.zip -d "$SDK_DIR/cmdline-tools-tmp"
-          mkdir -p "$SDK_DIR/cmdline-tools/latest"
-          cp -r "$SDK_DIR/cmdline-tools-tmp/cmdline-tools"/. "$SDK_DIR/cmdline-tools/latest/"
-          rm -rf "$SDK_DIR/cmdline-tools-tmp"
-          yes | "$SDK_DIR/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
-          "$SDK_DIR/cmdline-tools/latest/bin/sdkmanager" "platforms;android-33" "build-tools;33.0.2" "platform-tools"
-          ls "$SDK_DIR/platforms"
-        env:
-          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-          ANDROID_HOME: /usr/local/lib/android/sdk
-          JAVA_HOME: ${{ env.JAVA_HOME }}
-
+      
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -54,49 +34,31 @@ jobs:
             zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 \
             cmake libffi-dev libssl-dev \
             git zip unzip wget \
-            patchelf \
             libpq-dev
-
-      # Cython 0.29.x обязателен для сборки Kivy из исходников на устройстве
+      
+      # 3. Фиксируем Cython < 3.0 (обязательно для Kivy 2.3.1)
       - name: Install Buildozer and Cython
         run: |
-          pip install --upgrade pip "virtualenv==20.26.2"
-          pip install buildozer "cython<3.0" setuptools wheel
-
-      # КРИТИЧНО: PEP517 изолированные окружения сборки тянут последний Cython,
-      # который ломается ("No module named 'cgi'"). Ограничиваем версии через
-      # PIP_CONSTRAINT — переменная наследуется всеми вложенными вызовами pip,
-      # включая сборку внутри python-for-android.
-      - name: Pin versions inside isolated PEP517 build environments
+          pip install --upgrade pip
+          pip install buildozer "cython<3.0"
+      
+      - name: Pre-accept Android SDK licenses
         run: |
-          cat > "$RUNNER_TEMP/pip-constraints.txt" <<'EOF'
-          Cython<3.0
-          setuptools<70
-          EOF
-          echo "PIP_CONSTRAINT=$RUNNER_TEMP/pip-constraints.txt" >> "$GITHUB_ENV"
-
-      # Кэшируем ТОЛЬКО загруженные архивы (~/.cache/buildozer).
-      # Каталог .buildozer не кэшируется: в нём хранятся настроенные градиентные
-      # сборки, которые ломаются при смене состава SDK/платформ на раннере.
-      - name: Cache buildozer downloads
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/buildozer
-          key: buildozer-dl-${{ hashFiles('buildozer.spec') }}
-          restore-keys: buildozer-dl-
-
+          mkdir -p "$ANDROID_SDK_ROOT/licenses"
+          echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "$ANDROID_SDK_ROOT/licenses/android-sdk-license"
+          echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_SDK_ROOT/licenses/android-sdk-preview-license"
+        env:
+          ANDROID_SDK_ROOT: /opt/android/sdk
+      
       - name: Build APK
         run: |
           buildozer android debug
         env:
-          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-          ANDROID_HOME: /usr/local/lib/android/sdk
+          ANDROID_SDK_ROOT: /opt/android/sdk
           CI: true
-
+      
       - name: Upload APK
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: warehouse-apk
           path: bin/*.apk
-          if-no-files-found: warn

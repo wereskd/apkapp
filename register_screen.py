@@ -182,9 +182,8 @@ class RegisterScreen(Screen):
             error.text = "Заполните все поля"
             return
 
+        session = get_session()
         try:
-            session = get_session()
-        
             auth = AuthService(session)
             auth.register(username, password, fullname, role_name, current_user=None)
             session.commit()
@@ -193,23 +192,12 @@ class RegisterScreen(Screen):
             self.manager.current = "login"
         except ValueError as e:
             error.text = str(e)
-            try:
-                session.rollback()
-            except NameError:
-                pass
+            session.rollback()
         except Exception as e:
             error.text = f"Ошибка: {e}"
-            try:
-                session.rollback()
-            except NameError:
-                pass
+            session.rollback()
         finally:
-            try:
-                session.close()
-            except NameError:
-                pass
-            except NameError:
-                pass
+            session.close()
 
     def go_to_login(self) -> None:
         self.manager.current = "login"

@@ -183,9 +183,8 @@ class DetailViewScreen(Screen):
         return row
 
     def load_detail(self) -> None:
+        session = get_session()
         try:
-            session = get_session()
-        
             service = DetailService(session)
             detail = service.details.get(self.detail_id)
 
@@ -258,16 +257,10 @@ class DetailViewScreen(Screen):
         except Exception as e:
             show_popup("Ошибка", str(e))
         finally:
-            try:
-                session.close()
-            except NameError:
-                pass
-            except NameError:
-                pass
+            session.close()
     def load_operations(self) -> None:
+        session = get_session()
         try:
-            session = get_session()
-        
             service = OperationService(session)
             operations = service.history(self.detail_id)
 
@@ -316,12 +309,7 @@ class DetailViewScreen(Screen):
         except Exception as e:
             show_popup("Ошибка", str(e))
         finally:
-            try:
-                session.close()
-            except NameError:
-                pass
-            except NameError:
-                pass
+            session.close()
 
     def go_to_edit(self) -> None:
         self.manager.current = "detail_form"
@@ -331,9 +319,8 @@ class DetailViewScreen(Screen):
 
     def delete_detail(self) -> None:
         def on_confirm():
+            session = get_session()
             try:
-                session = get_session()
-            
                 service = DetailService(session)
                 service.delete(self.detail_id)
                 session.commit()
@@ -341,23 +328,12 @@ class DetailViewScreen(Screen):
                 self.go_back()
             except ValueError as e:
                 show_popup("Ошибка", str(e))
-                try:
-                    session.rollback()
-                except NameError:
-                    pass
+                session.rollback()
             except Exception as e:
                 show_popup("Ошибка", str(e))
-                try:
-                    session.rollback()
-                except NameError:
-                    pass
+                session.rollback()
             finally:
-                try:
-                    session.close()
-                except NameError:
-                    pass
-                except NameError:
-                    pass
+                session.close()
 
         show_confirm_popup(
             "Подтверждение",
