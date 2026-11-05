@@ -9,8 +9,8 @@ from domain.entities import Base
 IS_ANDROID = 'ANDROID_ARGUMENT' in os.environ
 
 # 2. Настройки подключения
-DB_USER = "postgres"
-DB_PASSWORD = "123"  # ⚠️ ЗАМЕНИТЕ на ваш реальный пароль от PostgreSQL
+DB_USER = os.environ.get("DB_USER", "postgres")
+DB_PASSWORD = os.environ.get("DB_PASSWORD", "123")  # ⚠️ ЗАМЕНИТЕ на ваш реальный пароль от PostgreSQL
 DB_NAME = "warehouse"
 DB_PORT = "5432"
 
