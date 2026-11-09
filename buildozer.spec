@@ -5,15 +5,12 @@ package.domain = org.baranskiy.warehouse
 version = 1.0.0
 
 source.dir = .
-source.include_exts = py,png,jpg,jpeg,kv,atlas,db,json
-source.exclude_dirs = .git,.github,.venv,venv,bin,__pycache__,.pytest_cache
+source.include_exts = py,png,jpg,kv,atlas,db,json
 
-requirements = python3,kivy==2.3.1,sqlalchemy,bcrypt,psycopg2
+requirements = python3,kivy==2.3.1,sqlalchemy,bcrypt,pg8000
 
 orientation = portrait
-fullscreen = 0
-
-android.permissions = INTERNET,ACCESS_NETWORK_STATE
+android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,ACCESS_NETWORK_STATE
 android.api = 33
 android.minapi = 21
 android.ndk = 25b
