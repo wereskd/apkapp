@@ -3,17 +3,21 @@
 ## What was corrected
 
 - The Android build uses Python 3.11.9 for both target Python and hostpython.
-  The previous run selected Python 3.14.2 automatically while compiling the
-  legacy bcrypt 3.1.7 recipe.
-- A project-local python-for-android bcrypt recipe keeps bcrypt 3.1.7 and adds
-  `pycparser` to hostpython build prerequisites. The failed run showed CFFI
-  trying to import `pycparser` during bcrypt's host-side CFFI build.
-- SQLAlchemy's PostgreSQL URL now uses `postgresql+pg8000`, matching the
-  Android dependency. This avoids requesting psycopg/psycopg2 while packaging
-  pg8000.
-- The python-for-android release and Buildozer version are pinned. The workflow
-  caches Buildozer downloads and retries the build once to tolerate transient
-  HTTP 504 download failures.
+- A project-local python-for-android bcrypt recipe keeps the existing bcrypt
+  3.1.7 version and adds `pycparser` to hostpython build prerequisites.
+- SQLAlchemy's PostgreSQL URL uses `postgresql+pg8000`, matching the Android
+  dependency. This avoids requesting psycopg/psycopg2 while packaging pg8000.
+- The latest build log confirms that bcrypt, cffi, and pycparser build
+  successfully. The actual failure occurs later: python-for-android creates a
+  temporary `build/venv`, upgrades pip, and then encounters inconsistent pip
+  internals (`open_rich_spinner` import error).
+- The workflow now removes only python-for-android's temporary `build/venv`
+  directories after restoring the cache and before each build attempt. This
+  prevents a partially upgraded pip environment from being reused, while
+  preserving the rest of the Android build cache and compiled project files.
+- The workflow still pins Buildozer and Cython, caches Android build downloads,
+  and retries once for transient download failures.
+
 
 ## Build
 
