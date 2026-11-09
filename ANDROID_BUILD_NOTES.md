@@ -1,24 +1,33 @@
-# Сборка Android APK
+# Android build notes
 
-Сборка выполняется командой:
+## What was corrected
 
-```bash
-buildozer android debug
-```
+- The Android build uses Python 3.11.9 for both target Python and hostpython.
+  The previous run selected Python 3.14.2 automatically while compiling the
+  legacy bcrypt 3.1.7 recipe.
+- A project-local python-for-android bcrypt recipe keeps bcrypt 3.1.7 and adds
+  `pycparser` to hostpython build prerequisites. The failed run showed CFFI
+  trying to import `pycparser` during bcrypt's host-side CFFI build.
+- SQLAlchemy's PostgreSQL URL now uses `postgresql+pg8000`, matching the
+  Android dependency. This avoids requesting psycopg/psycopg2 while packaging
+  pg8000.
+- The python-for-android release and Buildozer version are pinned. The workflow
+  caches Buildozer downloads and retries the build once to tolerate transient
+  HTTP 504 download failures.
 
-APK появится в каталоге `bin/`.
+## Build
 
-## Подключение к PostgreSQL
+Push the project to the `main` branch or run **Actions -> Build APK -> Run
+workflow**. On success, download the `warehouse-apk` artifact from that run.
 
-Приложение подключается к PostgreSQL напрямую через SQLAlchemy. На Android
-`localhost` означает сам телефон, а не компьютер с базой данных. Поэтому
-`DB_HOST` должен содержать IP-адрес компьютера/сервера, доступный телефону
-по сети; PostgreSQL должен принимать подключения с этого адреса.
+The APK has not been built or run on a physical Android device in this editing
+session. A successful GitHub Actions run and a device smoke test are still
+required to confirm packaging and runtime behavior.
 
-Для Android используется драйвер `pg8000` — чисто Python-драйвер PostgreSQL,
-который не требует нативной сборки `psycopg2`. Это устраняет проблемный шаг
-python-for-android, на котором ранее останавливалась сборка.
+## Database connection
 
-Параметры подключения: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`,
-`DB_PASSWORD`. Значения по умолчанию в проекте оставлены для совместимости
-с прежним запуском; перед реальным использованием задайте рабочие параметры.
+The app connects to PostgreSQL through SQLAlchemy and pg8000. On Android,
+`DB_HOST=localhost` points to the phone itself, not the development PC. Set
+`DB_HOST` to the reachable LAN address or DNS name of the PostgreSQL server,
+and ensure PostgreSQL accepts connections from the phone/network. Do not expose
+port 5432 to the public internet without appropriate network protections.
