@@ -14,7 +14,7 @@ DB_NAME = os.getenv("DB_NAME", "postgres")
 
 def build_url() -> URL:
     return URL.create(
-        drivername="postgresql+pg8000",
+        drivername="postgresql+psycopg",
         username=DB_USER,
         password=DB_PASSWORD,
         host=DB_HOST,
