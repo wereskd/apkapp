@@ -5,20 +5,23 @@ package.domain = org.baranskiy.warehouse
 version = 1.0.0
 
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,db,json
+source.include_exts = py,png,jpg,kv,atlas,json
+# Исключаем папки бэкенда из APK
+source.exclude_dirs = api, database, migrations, __pycache__, tests, .git, .buildozer, venv
 
-requirements = python3==3.11.9,hostpython3==3.11.9,kivy==2.3.1,sqlalchemy,bcrypt,pg8000
+requirements = python3==3.10.12,hostpython3==3.10.12,kivy==2.2.1,requests,certifi,urllib3,chardet,idna
 
 orientation = portrait
-android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,ACCESS_NETWORK_STATE
+android.archs = arm64-v8a
+android.permissions = INTERNET
 android.api = 33
 android.minapi = 21
 android.ndk = 25b
-android.archs = arm64-v8a,armeabi-v7a
 android.accept_sdk_license = True
-p4a.bootstrap = sdl2
-p4a.branch = v2026.05.09
-p4a.local_recipes = ./p4a-recipes
+android.no_compile_pyo = True
+android.release_artifact = apk
+p4a.branch = master
 
 [buildozer]
+log_level = 2
 warn_on_root = 1
