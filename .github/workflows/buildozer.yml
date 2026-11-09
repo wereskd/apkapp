@@ -1,4 +1,5 @@
-name: Build APK
+# .github/workflows/buildozer.yml
+name: Build APK (Frontend Only)
 
 on:
   push:
@@ -8,23 +9,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       
-      # 1. Фиксируем Python 3.11 (Kivy 2.3.x не работает с 3.14)
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10.12'
-      
-      # 2. Явно устанавливаем Java 17 (требуется для сборки Android)
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+          python-version: '3.10'
       
       - name: Install system dependencies
         run: |
@@ -33,10 +24,8 @@ jobs:
             autoconf automake build-essential libtool pkg-config \
             zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 \
             cmake libffi-dev libssl-dev \
-            git zip unzip wget \
-            libpq-dev
+            openjdk-17-jdk-headless git zip unzip wget
       
-      # 3. Фиксируем Cython < 3.0 (обязательно для Kivy 2.3.1)
       - name: Install Buildozer and Cython
         run: |
           pip install --upgrade pip
@@ -51,8 +40,7 @@ jobs:
           ANDROID_SDK_ROOT: /opt/android/sdk
       
       - name: Build APK
-        run: |
-          buildozer android debug
+        run: buildozer android debug
         env:
           ANDROID_SDK_ROOT: /opt/android/sdk
           CI: true
